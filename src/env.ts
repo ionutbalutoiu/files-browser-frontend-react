@@ -1,4 +1,29 @@
 /**
+ * Runtime configuration injected at container startup.
+ */
+interface RuntimeConfig {
+  PUBLIC_BASE_URL?: string
+}
+
+declare global {
+  interface Window {
+    __RUNTIME_CONFIG__?: RuntimeConfig
+  }
+}
+
+/**
+ * Get runtime config value, falling back to placeholder check.
+ */
+function getRuntimeConfig(): RuntimeConfig {
+  const config = window.__RUNTIME_CONFIG__ ?? {}
+  // Check if placeholder was not replaced (dev mode or misconfiguration)
+  if (config.PUBLIC_BASE_URL === '__PUBLIC_BASE_URL__') {
+    return { PUBLIC_BASE_URL: '' }
+  }
+  return config
+}
+
+/**
  * Environment configuration with defaults.
  */
 export const env = {
@@ -8,16 +33,15 @@ export const env = {
   /** Base URL for file listings (Nginx autoindex) */
   filesOrigin: import.meta.env.VITE_FILES_ORIGIN || '',
 
-  /** Base URL for share links */
-  shareOrigin: import.meta.env.VITE_SHARE_ORIGIN || '',
-
   /** Share URL template */
-  shareUrlTemplate: import.meta.env.VITE_SHARE_URL_TEMPLATE || '/s/{shareId}',
+  shareUrlTemplate: import.meta.env.VITE_SHARE_URL_TEMPLATE || '/{shareId}',
 } as const
 
-// Warn if share origin is not configured
-if (!env.shareOrigin && typeof window !== 'undefined') {
-  console.warn('VITE_SHARE_ORIGIN is not configured. Share links may not work correctly.')
+/**
+ * Get the public base URL for share links (runtime injected).
+ */
+export function getPublicBaseUrl(): string {
+  return getRuntimeConfig().PUBLIC_BASE_URL || ''
 }
 
 /**
@@ -26,5 +50,6 @@ if (!env.shareOrigin && typeof window !== 'undefined') {
 export function buildShareUrl(shareId: string): string {
   const template = env.shareUrlTemplate
   const path = template.replace('{shareId}', encodeURIComponent(shareId))
-  return env.shareOrigin ? `${env.shareOrigin}${path}` : path
+  const baseUrl = getPublicBaseUrl()
+  return baseUrl ? `${baseUrl}${path}` : path
 }

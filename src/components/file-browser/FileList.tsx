@@ -1,6 +1,5 @@
-import { useCallback, useMemo, useRef, MouseEvent, useState } from 'react'
+import { useCallback, useMemo, useState, MouseEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useVirtualizer } from '@tanstack/react-virtual'
 import {
   DndContext,
   DragEndEvent,
@@ -87,18 +86,17 @@ function ParentRow({ currentPath }: { currentPath: string }) {
     <div
       ref={setNodeRef}
       onClick={handleClick}
-      className={`flex h-12 cursor-pointer items-center gap-3 border-b border-border/30 px-4 text-muted-foreground transition-all duration-150 hover:bg-accent/40 ${
+      className={`flex h-12 cursor-pointer items-center border-b border-border/30 px-4 text-muted-foreground transition-all duration-150 hover:bg-accent/40 ${
         isOver ? 'bg-primary/15 ring-1 ring-primary/50 ring-inset' : ''
       }`}
     >
-      <FileIcon name=".." isDirectory />
+      <FileIcon name=".." isDirectory className="mr-3" />
       <span className="text-sm">..</span>
     </div>
   )
 }
 
 export function FileList({ entries, currentPath, isLoading }: FileListProps) {
-  const parentRef = useRef<HTMLDivElement>(null)
   const [activeDrag, setActiveDrag] = useState<DragItem | null>(null)
 
   const { sortBy, sortDirection, selectPath, selectRange, openContextMenu, clearSelection, cancelRename } = useUIStore()
@@ -134,13 +132,6 @@ export function FileList({ entries, currentPath, isLoading }: FileListProps) {
       ),
     [sortedEntries, currentPath]
   )
-
-  const virtualizer = useVirtualizer({
-    count: sortedEntries.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 48,
-    overscan: 5,
-  })
 
   const handleSelect = useCallback(
     (path: string, additive: boolean, range: boolean) => {
@@ -252,47 +243,25 @@ export function FileList({ entries, currentPath, isLoading }: FileListProps) {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div ref={parentRef} className="max-h-[calc(100vh-220px)] min-h-[300px] overflow-auto">
+      <div>
         <ParentRow currentPath={currentPath} />
-        <div
-          style={{
-            height: `${virtualizer.getTotalSize()}px`,
-            width: '100%',
-            position: 'relative',
-          }}
-        >
-          {virtualizer.getVirtualItems().map((virtualRow) => {
-            const entry = sortedEntries[virtualRow.index]
-            if (!entry) return null
+        {sortedEntries.map((entry) => {
+          const entryPath = currentPath ? joinPath(currentPath, entry.name) : entry.name
 
-            const entryPath = currentPath ? joinPath(currentPath, entry.name) : entry.name
-
-            return (
-              <div
-                key={entry.name}
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: `${virtualRow.size}px`,
-                  transform: `translateY(${virtualRow.start}px)`,
-                }}
-              >
-                <FileRow
-                  entry={entry}
-                  currentPath={currentPath}
-                  isSelected={selectedPaths.has(entryPath)}
-                  isRenaming={renamingPath === entryPath}
-                  onSelect={handleSelect}
-                  onContextMenu={handleContextMenu}
-                  onRename={(newName) => handleRename(entryPath, entry.type === 'directory', newName)}
-                  onCancelRename={cancelRename}
-                />
-              </div>
-            )
-          })}
-        </div>
+          return (
+            <FileRow
+              key={entry.name}
+              entry={entry}
+              currentPath={currentPath}
+              isSelected={selectedPaths.has(entryPath)}
+              isRenaming={renamingPath === entryPath}
+              onSelect={handleSelect}
+              onContextMenu={handleContextMenu}
+              onRename={(newName) => handleRename(entryPath, entry.type === 'directory', newName)}
+              onCancelRename={cancelRename}
+            />
+          )
+        })}
       </div>
       <DragOverlay>
         {activeDrag ? (

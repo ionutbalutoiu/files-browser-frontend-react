@@ -1,0 +1,91 @@
+server {
+    listen ${PUBLIC_LISTEN};
+    server_name ${PUBLIC_SERVER_NAME};
+
+    # Exact root path: return "ok"
+    location = / {
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    # Serve static files
+    location ${PUBLIC_FILES_LOCATION} {
+        alias ${PUBLIC_FILES_PATH};
+        try_files $uri =404;
+    }
+
+    # Static 404 response
+    error_page 404 = @not_found;
+    location @not_found {
+        default_type text/plain;
+        return 404 "404 Not Found\n";
+    }
+
+    # Static 5xx response
+    error_page 500 502 503 504 = @internal_error;
+    location @internal_error {
+        default_type text/plain;
+        return 500 "Internal Server Error\n";
+    }
+}
+
+server {
+    listen ${INTERNAL_LISTEN};
+    server_name ${INTERNAL_SERVER_NAME};
+
+    # Serve the SPA under /
+    location / {
+        alias /app/dist/;
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Serve directory listings as JSON
+    location ${INTERNAL_FILES_LOCATION} {
+        alias ${INTERNAL_FILES_PATH};
+
+        # Enable autoindex with JSON format
+        autoindex on;
+        autoindex_format json;
+
+        # Ensure proper content type for JSON responses
+        default_type application/json;
+    }
+
+    # Backend API proxying
+    location /api/ {
+        # Proxy to the internal API server
+        proxy_pass ${INTERNAL_API_BASE_PATH};
+
+        # Required headers
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Disable buffering for streaming uploads
+        proxy_request_buffering off;
+
+        # Maximum upload size (must match or exceed Go service's -max-size)
+        client_max_body_size 2G;
+
+        # Increase timeouts for large uploads
+        proxy_connect_timeout 300;
+        proxy_send_timeout 300;
+        proxy_read_timeout 300;
+        send_timeout 300;
+    }
+
+    # Static 404 response
+    error_page 404 = @not_found;
+    location @not_found {
+        default_type application/json;
+        return 404 '{"error":"404 Not Found"}';
+    }
+
+    # Static 5xx response
+    error_page 500 502 503 504 = @internal_error;
+    location @internal_error {
+        default_type application/json;
+        return 500 '{"error":"Internal Server Error"}';
+    }
+}

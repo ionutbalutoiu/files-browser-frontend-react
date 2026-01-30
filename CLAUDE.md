@@ -1,7 +1,7 @@
 # File Browser Frontend - Project Context
 
 ## Project Status
-Core implementation complete. Mobile-friendly UI with inline editing features.
+Core implementation complete. Mobile-friendly UI with inline rename, file search, drag-and-drop, and public share management.
 
 ## What This Is
 Production-ready SPA file browser frontend integrating with a backend API for file operations (upload, mkdir, rename, move, delete) and public share management. Single-tenant, no auth.
@@ -13,7 +13,7 @@ Production-ready SPA file browser frontend integrating with a backend API for fi
 - **UI**: Radix UI primitives (Dialog, ContextMenu, DropdownMenu, Tooltip, Toast, ScrollArea)
 - **State**: Zustand 4.5+ (selection, sorting, dialogs, inline rename)
 - **DnD**: @dnd-kit/core 6.1+ (with TouchSensor for mobile)
-- **Virtualization**: @tanstack/react-virtual 3.8+
+- **Virtualization**: @tanstack/react-virtual 3.8+ (available but not currently used)
 - **Validation**: Zod 3.23+
 - **Testing**: Vitest + React Testing Library + Playwright + MSW
 
@@ -36,6 +36,7 @@ DELETE /api/public-shares?path=    # Delete share
 ```
 src/
 ├── api/client.ts              # apiFetch, filesFetch, uploadFetch with ApiError class
+├── env.ts                     # Runtime config: getPublicBaseUrl(), buildShareUrl()
 ├── lib/
 │   ├── path.ts                # validatePath, joinPath, dirname, basename
 │   ├── query-keys.ts          # Query key factory
@@ -48,7 +49,7 @@ src/
 │   └── useKeyboardNavigation.ts
 ├── components/
 │   ├── ui/                    # Radix wrappers with Tailwind
-│   ├── file-browser/          # FileBrowser, FileList, FileRow, Breadcrumbs, Toolbar, FileContextMenu
+│   ├── file-browser/          # FileBrowser, FileList, FileRow, Breadcrumbs, Toolbar, FileContextMenu, SearchInput
 │   ├── dialogs/               # NewFolderDialog, DeleteConfirmDialog, ShareDialog
 │   ├── shares/                # SharesList, ShareRow
 │   └── upload/                # UploadDropzone
@@ -84,7 +85,7 @@ interface UIState {
 ### Mobile Support
 - **Responsive columns**: Size hidden on mobile (sm+), Modified hidden on tablets (md+)
 - **Touch drag**: Hold 300ms to initiate drag-and-drop move
-- **Context menu**: Always-visible `⋮` button on mobile, hover-reveal on desktop
+- **Context menu**: Always-visible `⋮` button with hover highlight
 - **Viewport-aware menus**: Context menu auto-repositions to stay within screen bounds
 - **Scrollable breadcrumbs**: Horizontal scroll with hidden scrollbar
 
@@ -97,14 +98,28 @@ interface UIState {
 ### Layout
 - Max-width container (6xl/1152px) centered
 - Card-based file browser with rounded corners and subtle shadow
-- Combined breadcrumbs + toolbar header row
-- Virtualized file list for performance
+- Combined breadcrumbs + search + toolbar header row
+- File list with natural page scrolling (no internal scrollbar)
+- Footer with folder/file counts
+
+### Search
+- Expandable search input next to breadcrumbs
+- Filters entries by name (case-insensitive)
+- Shows result count when active
+- Escape to clear and collapse
 
 ### Text Sizes
+- Base font: 17px (set in index.css)
 - File names: 14px (text-sm)
 - Metadata: 12px (text-xs)
 - Headers: 16px (text-base)
 - Navigation: 14px (text-sm)
+
+### Table Column Widths
+- Name: flex-1 (fills remaining space)
+- Size: w-20, text-right
+- Modified: w-52, ml-6, text-right
+- Menu button: w-10, ml-4
 
 ## Critical Path Validation Rules
 Reject paths that:
@@ -124,8 +139,14 @@ Reject paths that:
 VITE_API_ORIGIN          # API base URL (default: same origin)
 VITE_FILES_ORIGIN        # Files listing base URL (default: same origin)
 VITE_SHARE_ORIGIN        # Share link base URL (warn if missing)
-VITE_SHARE_URL_TEMPLATE  # Default: /s/{shareId}
+VITE_SHARE_URL_TEMPLATE  # Default: /{shareId}
 ```
+
+### Runtime Configuration
+Share links use `PUBLIC_BASE_URL` injected at runtime via Docker:
+- `public/assets/runtime-config.js` contains placeholder
+- Docker entrypoint replaces `__PUBLIC_BASE_URL__` with actual value
+- `src/env.ts` exports `getPublicBaseUrl()` and `buildShareUrl()`
 
 ## Commands
 ```bash
@@ -172,6 +193,18 @@ if (!isDirectory && lastDot > 0) {
 }
 ```
 
+### Date Formatting
+```typescript
+// Consistent format: "Jan 15, 2026, 07:53 PM"
+new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+}).format(date)
+```
+
 ## React Best Practices
 1. **Direct imports** - import `@radix-ui/react-dialog` not from barrel
 2. **Functional setState** - use callback form for stable callbacks
@@ -186,3 +219,5 @@ if (!isDirectory && lastDot > 0) {
 - Mobile: always show action buttons, don't rely on hover states
 - TouchSensor needs `delay` constraint, PointerSensor needs `distance`
 - Tailwind responsive: `sm:` = 640px+, `md:` = 768px+
+- New Folder uses dialog (not inline) - inline error display was problematic
+- Share operations show toast notifications with clipboard copy on create

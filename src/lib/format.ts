@@ -15,38 +15,17 @@ export function formatFileSize(bytes: number | undefined): string {
 
 /**
  * Formats a date string to a human-readable format.
+ * Output: "Jan 15, 2026, 07:53 PM"
  */
 export function formatDate(dateString: string): string {
   const date = new Date(dateString)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
 
-  if (diffDays === 0) {
-    return date.toLocaleTimeString(undefined, {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
-
-  if (diffDays === 1) {
-    return 'Yesterday'
-  }
-
-  if (diffDays < 7) {
-    return date.toLocaleDateString(undefined, { weekday: 'short' })
-  }
-
-  if (date.getFullYear() === now.getFullYear()) {
-    return date.toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-    })
-  }
-
-  return date.toLocaleDateString(undefined, {
-    year: 'numeric',
+  return date.toLocaleString('en-US', {
     month: 'short',
     day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
   })
 }

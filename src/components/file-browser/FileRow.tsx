@@ -146,14 +146,14 @@ export const FileRow = memo(function FileRow({
         }
       }}
       data-file-row
-      className={`content-auto group flex h-12 cursor-pointer items-center gap-3 border-b border-border/30 px-4 transition-all duration-150 hover:bg-accent/40 ${
+      className={`content-auto group flex h-12 cursor-pointer items-center border-b border-border/30 px-4 transition-all duration-150 hover:bg-accent/40 ${
         isSelected ? 'bg-primary/8 hover:bg-primary/12' : ''
       } ${isDragging ? 'opacity-50 scale-[0.98]' : ''} ${isOver && isDirectory ? 'bg-primary/15 ring-1 ring-primary/50 ring-inset' : ''} ${isRenaming ? 'bg-accent/60' : ''}`}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
       {...(isRenaming ? {} : { ...attributes, ...listeners })}
     >
-      <FileIcon name={entry.name} isDirectory={isDirectory} className="flex-shrink-0" />
+      <FileIcon name={entry.name} isDirectory={isDirectory} className="flex-shrink-0 mr-3" />
       {isRenaming ? (
         <form onSubmit={handleRenameSubmit} className="flex-1 min-w-0">
           <input
@@ -170,10 +170,10 @@ export const FileRow = memo(function FileRow({
       ) : (
         <span className="flex-1 truncate text-sm">{entry.name}</span>
       )}
-      <span className="hidden sm:block w-24 text-right text-xs text-muted-foreground">
+      <span className="hidden sm:block w-20 text-right text-xs text-muted-foreground">
         {formatFileSize(entry.size)}
       </span>
-      <span className="hidden md:block w-36 text-right text-xs text-muted-foreground">
+      <span className="hidden md:block w-52 text-right text-xs text-muted-foreground ml-6">
         {formatDate(entry.mtime)}
       </span>
       {/* Menu button */}
@@ -181,7 +181,7 @@ export const FileRow = memo(function FileRow({
         <button
           type="button"
           onClick={handleMenuClick}
-          className="flex-shrink-0 p-1.5 rounded-md text-muted-foreground/60 sm:opacity-0 sm:group-hover:opacity-100 hover:text-foreground hover:bg-accent/60 transition-all"
+          className="flex-shrink-0 w-10 ml-4 p-1.5 rounded-md flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-accent/60 transition-all"
           aria-label="Open menu"
         >
           <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -191,7 +191,7 @@ export const FileRow = memo(function FileRow({
           </svg>
         </button>
       ) : (
-        <div className="w-8" />
+        <div className="w-10 ml-4" />
       )}
     </div>
   )

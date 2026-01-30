@@ -1,4 +1,4 @@
-import { useEffect, useCallback, MouseEvent } from 'react'
+import { useEffect, useCallback, useState, useMemo, MouseEvent } from 'react'
 import { useDirectoryQuery } from '../../hooks/queries/useDirectoryQuery'
 import { useKeyboardNavigation } from '../../hooks/useKeyboardNavigation'
 import { useUIStore } from '../../stores/uiStore'
@@ -6,6 +6,7 @@ import { Breadcrumbs } from './Breadcrumbs'
 import { FileList } from './FileList'
 import { FileListHeader } from './FileListHeader'
 import { Toolbar } from './Toolbar'
+import { SearchInput } from './SearchInput'
 import { FileContextMenu } from './FileContextMenu'
 import { UploadDropzone } from '../upload/UploadDropzone'
 import { NewFolderDialog } from '../dialogs/NewFolderDialog'
@@ -18,21 +19,37 @@ interface FileBrowserProps {
 
 export function FileBrowser({ path }: FileBrowserProps) {
   const { data: entries = [], isLoading, error } = useDirectoryQuery(path)
+  const [searchQuery, setSearchQuery] = useState('')
   const clearSelection = useUIStore((state) => state.clearSelection)
   const closeContextMenu = useUIStore((state) => state.closeContextMenu)
   const openContextMenu = useUIStore((state) => state.openContextMenu)
   const activeDialog = useUIStore((state) => state.activeDialog)
 
+  // Filter entries based on search query
+  const filteredEntries = useMemo(() => {
+    if (!searchQuery.trim()) return entries
+    const query = searchQuery.toLowerCase()
+    return entries.filter((entry) => entry.name.toLowerCase().includes(query))
+  }, [entries, searchQuery])
+
+  // Count folders and files
+  const itemCounts = useMemo(() => {
+    const folders = filteredEntries.filter((e) => e.type === 'directory').length
+    const files = filteredEntries.filter((e) => e.type === 'file').length
+    return { folders, files, total: folders + files }
+  }, [filteredEntries])
+
   // Enable keyboard navigation when no dialog is open
   useKeyboardNavigation({
-    entries,
+    entries: filteredEntries,
     currentPath: path,
     enabled: !activeDialog && !isLoading,
   })
 
-  // Clear selection when path changes
+  // Clear selection and search when path changes
   useEffect(() => {
     clearSelection()
+    setSearchQuery('')
   }, [path, clearSelection])
 
   // Handle background right-click
@@ -97,13 +114,35 @@ export function FileBrowser({ path }: FileBrowserProps) {
         >
           {/* Header with breadcrumbs and toolbar */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border bg-muted/30 px-4 py-3">
-            <Breadcrumbs path={path} />
+            <div className="flex items-center gap-1">
+              <Breadcrumbs path={path} />
+              <SearchInput
+                value={searchQuery}
+                onChange={setSearchQuery}
+                resultCount={searchQuery ? filteredEntries.length : undefined}
+              />
+            </div>
             <Toolbar />
           </div>
 
           {/* File list */}
           <FileListHeader />
-          <FileList entries={entries} currentPath={path} isLoading={isLoading} />
+          <FileList entries={filteredEntries} currentPath={path} isLoading={isLoading} />
+
+          {/* Footer with item count */}
+          {!isLoading && itemCounts.total > 0 ? (
+            <div className="border-t border-border bg-muted/20 px-4 py-2">
+              <p className="text-xs text-muted-foreground">
+                {itemCounts.folders > 0 ? (
+                  <span>{itemCounts.folders} {itemCounts.folders === 1 ? 'folder' : 'folders'}</span>
+                ) : null}
+                {itemCounts.folders > 0 && itemCounts.files > 0 ? <span>, </span> : null}
+                {itemCounts.files > 0 ? (
+                  <span>{itemCounts.files} {itemCounts.files === 1 ? 'file' : 'files'}</span>
+                ) : null}
+              </p>
+            </div>
+          ) : null}
         </div>
       </div>
 

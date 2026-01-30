@@ -2,6 +2,7 @@ import { memo, useCallback, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../ui/Button'
 import { useDeleteShare } from '../../hooks/mutations/useDeleteShare'
+import { useToast } from '../../providers/ToastProvider'
 import { buildShareUrl } from '../../env'
 import { dirname, basename } from '../../lib/path'
 
@@ -12,6 +13,7 @@ interface ShareRowProps {
 export const ShareRow = memo(function ShareRow({ path }: ShareRowProps) {
   const [copied, setCopied] = useState(false)
   const deleteShare = useDeleteShare()
+  const { toast } = useToast()
 
   const name = basename(path)
   const folder = dirname(path)
@@ -28,8 +30,26 @@ export const ShareRow = memo(function ShareRow({ path }: ShareRowProps) {
   }, [shareUrl])
 
   const handleDelete = useCallback(() => {
-    deleteShare.mutate({ path })
-  }, [path, deleteShare])
+    deleteShare.mutate(
+      { path },
+      {
+        onSuccess: () => {
+          toast({
+            title: 'Share removed',
+            description: `"${name}" is no longer shared.`,
+            variant: 'success',
+          })
+        },
+        onError: (err) => {
+          toast({
+            title: 'Failed to remove share',
+            description: err instanceof Error ? err.message : 'An error occurred',
+            variant: 'destructive',
+          })
+        },
+      }
+    )
+  }, [path, name, deleteShare, toast])
 
   return (
     <div className="group flex items-center gap-4 px-4 py-4 transition-all duration-150 hover:bg-accent/40 animate-fade-in">

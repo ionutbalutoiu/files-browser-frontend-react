@@ -28,7 +28,7 @@ export function FileListHeader() {
   )
 
   return (
-    <div className="sticky top-14 z-10 flex h-10 items-center gap-2 sm:gap-3 border-b border-border/50 bg-muted/50 px-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+    <div className="sticky top-14 z-10 flex h-10 items-center border-b border-border/50 bg-muted/50 px-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">
       <button
         className="flex flex-1 items-center transition-colors hover:text-foreground"
         onClick={() => handleSort('name')}
@@ -37,21 +37,21 @@ export function FileListHeader() {
         <SortIcon active={sortBy === 'name'} direction={sortDirection} />
       </button>
       <button
-        className="hidden sm:flex w-24 items-center justify-end transition-colors hover:text-foreground"
+        className="hidden sm:flex w-20 items-center justify-end transition-colors hover:text-foreground"
         onClick={() => handleSort('size')}
       >
         Size
         <SortIcon active={sortBy === 'size'} direction={sortDirection} />
       </button>
       <button
-        className="hidden md:flex w-36 items-center justify-end transition-colors hover:text-foreground"
+        className="hidden md:flex w-52 items-center justify-end transition-colors hover:text-foreground ml-6"
         onClick={() => handleSort('mtime')}
       >
         Modified
         <SortIcon active={sortBy === 'mtime'} direction={sortDirection} />
       </button>
       {/* Spacer for menu button column */}
-      <div className="w-8" />
+      <div className="w-10 ml-4" />
     </div>
   )
 }

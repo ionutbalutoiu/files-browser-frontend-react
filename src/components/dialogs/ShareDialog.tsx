@@ -13,6 +13,7 @@ import { useUIStore } from '../../stores/uiStore'
 import { useCreateShare } from '../../hooks/mutations/useCreateShare'
 import { useDeleteShare } from '../../hooks/mutations/useDeleteShare'
 import { useSharesQuery } from '../../hooks/queries/useSharesQuery'
+import { useToast } from '../../providers/ToastProvider'
 import { buildShareUrl } from '../../env'
 import { basename } from '../../lib/path'
 
@@ -27,6 +28,7 @@ export function ShareDialog() {
   const createShare = useCreateShare()
   const deleteShare = useDeleteShare()
   const { data: shares = [] } = useSharesQuery()
+  const { toast } = useToast()
 
   const isOpen = activeDialog === 'share'
   const path = dialogData?.path ?? ''
@@ -58,24 +60,62 @@ export function ShareDialog() {
     createShare.mutate(
       { path },
       {
+        onSuccess: async () => {
+          const url = buildShareUrl(path)
+          try {
+            await navigator.clipboard.writeText(url)
+            toast({
+              title: 'Share link copied',
+              description: 'The link has been copied to your clipboard.',
+              variant: 'success',
+            })
+          } catch {
+            toast({
+              title: 'Share created',
+              description: 'Share link created but could not copy to clipboard.',
+              variant: 'success',
+            })
+          }
+          closeDialog()
+        },
         onError: (err) => {
-          setError(err instanceof Error ? err.message : 'Failed to create share')
+          const message = err instanceof Error ? err.message : 'Failed to create share'
+          setError(message)
+          toast({
+            title: 'Failed to create share',
+            description: message,
+            variant: 'destructive',
+          })
         },
       }
     )
-  }, [path, createShare])
+  }, [path, createShare, toast, closeDialog])
 
   const handleDeleteShare = useCallback(() => {
     setError(null)
     deleteShare.mutate(
       { path },
       {
+        onSuccess: () => {
+          toast({
+            title: 'Share removed',
+            description: 'The share link has been removed.',
+            variant: 'success',
+          })
+          closeDialog()
+        },
         onError: (err) => {
-          setError(err instanceof Error ? err.message : 'Failed to delete share')
+          const message = err instanceof Error ? err.message : 'Failed to delete share'
+          setError(message)
+          toast({
+            title: 'Failed to remove share',
+            description: message,
+            variant: 'destructive',
+          })
         },
       }
     )
-  }, [path, deleteShare])
+  }, [path, deleteShare, toast, closeDialog])
 
   const handleCopyLink = useCallback(async () => {
     try {
