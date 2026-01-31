@@ -3,6 +3,7 @@ import { UploadItemComponent } from './UploadItem'
 
 export function UploadPanel() {
   const items = useUploadStore((state) => state.items)
+  const exitingIds = useUploadStore((state) => state.exitingIds)
   const isPanelOpen = useUploadStore((state) => state.isPanelOpen)
   const clearCompleted = useUploadStore((state) => state.clearCompleted)
 
@@ -31,7 +32,7 @@ export function UploadPanel() {
         {/* Items list */}
         <div className="max-h-64 overflow-y-auto">
           {items.map((item) => (
-            <UploadItemComponent key={item.id} item={item} />
+            <UploadItemComponent key={item.id} item={item} isExiting={exitingIds.has(item.id)} />
           ))}
         </div>
       </div>

@@ -5,6 +5,7 @@ import { useUploadStore } from '../../stores/uploadStore'
 
 interface UploadItemProps {
   item: UploadItemType
+  isExiting: boolean
 }
 
 const statusConfig: Record<
@@ -68,7 +69,7 @@ function formatFileSize(bytes: number): string {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`
 }
 
-export const UploadItemComponent = memo(function UploadItem({ item }: UploadItemProps) {
+export const UploadItemComponent = memo(function UploadItem({ item, isExiting }: UploadItemProps) {
   const queryClient = useQueryClient()
   const cancel = useUploadStore((state) => state.cancel)
   const retry = useUploadStore((state) => state.retry)
@@ -89,7 +90,11 @@ export const UploadItemComponent = memo(function UploadItem({ item }: UploadItem
   }, [remove, item.id])
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3 border-b border-border/50 last:border-b-0">
+    <div
+      className={`flex items-center gap-3 px-4 py-3 border-b border-border/50 last:border-b-0 transition-opacity duration-200 ${
+        isExiting ? 'opacity-0' : 'opacity-100'
+      }`}
+    >
       {/* Status icon badge */}
       <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl shadow-md ${config.bg}`}>
         {config.icon}
@@ -125,7 +130,7 @@ export const UploadItemComponent = memo(function UploadItem({ item }: UploadItem
 
       {/* Action buttons */}
       <div className="flex items-center gap-1">
-        {item.status === 'failed' ? (
+        {item.status === 'failed' && item.error !== 'File already exists' ? (
           <button
             onClick={handleRetry}
             className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"

@@ -31,6 +31,7 @@ const DISMISS_DURATIONS: Record<NotificationType, number> = {
   error: 10000,
 }
 
+const EXIT_ANIMATION_DURATION = 200
 const MAX_VISIBLE = 3
 
 interface NotificationState {
@@ -93,7 +94,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
     // Remove after animation completes
     setTimeout(() => {
       get().removeNotification(id)
-    }, 200)
+    }, EXIT_ANIMATION_DURATION)
   },
 
   removeNotification: (id) => {

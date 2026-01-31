@@ -1,9 +1,10 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { uploadSingleFile } from '../api/client'
-import { showNotification } from './notificationStore'
 import { invalidateDir } from '../lib/cache'
+import { queryKeys } from '../lib/query-keys'
 import type { QueryClient } from '@tanstack/react-query'
+import type { DirectoryListing } from '../schemas/directory'
 
 export type UploadStatus = 'queued' | 'uploading' | 'processing' | 'done' | 'failed'
 
@@ -26,6 +27,7 @@ const abortControllerMap = new Map<string, AbortController>()
 
 interface UploadState {
   items: UploadItem[]
+  exitingIds: Set<string>
   isPanelOpen: boolean
   concurrency: number
 
@@ -33,6 +35,7 @@ interface UploadState {
   addFiles: (files: File[], targetPath: string, queryClient: QueryClient) => void
   cancel: (id: string) => void
   retry: (id: string, queryClient: QueryClient) => void
+  dismiss: (id: string) => void
   remove: (id: string) => void
   clearCompleted: () => void
   togglePanel: () => void
@@ -46,29 +49,43 @@ interface UploadState {
 // Retry delays: 1s, 2s, 4s
 const RETRY_DELAYS = [1000, 2000, 4000]
 const MAX_RETRIES = 3
+const AUTO_DISMISS_DELAY = 5000
+const EXIT_ANIMATION_DURATION = 200
 
 export const useUploadStore = create<UploadState>()(
   persist(
     (set, get) => ({
       items: [],
+      exitingIds: new Set<string>(),
       isPanelOpen: false,
       concurrency: 3,
 
       addFiles: (files, targetPath, queryClient) => {
+        // Get cached directory listing to check for existing files
+        const cachedDir = queryClient.getQueryData<DirectoryListing>(
+          queryKeys.dirs.detail(targetPath)
+        )
+        const existingNames = new Set(cachedDir?.map((entry) => entry.name) ?? [])
+
         const newItems: UploadItem[] = files.map((file) => {
           const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
-          // Store file reference
-          fileMap.set(id, file)
+          const alreadyExists = existingNames.has(file.name)
+
+          // Only store file reference if it doesn't already exist
+          if (!alreadyExists) {
+            fileMap.set(id, file)
+          }
 
           return {
             id,
             fileName: file.name,
             fileSize: file.size,
             targetPath,
-            status: 'queued' as const,
+            status: alreadyExists ? ('failed' as const) : ('queued' as const),
             progress: 0,
             retryCount: 0,
             createdAt: Date.now(),
+            ...(alreadyExists ? { error: 'File already exists' } : {}),
           }
         })
 
@@ -77,7 +94,16 @@ export const useUploadStore = create<UploadState>()(
           isPanelOpen: true,
         }))
 
-        // Start processing
+        // Auto-dismiss "File already exists" items after delay
+        for (const item of newItems) {
+          if (item.status === 'failed') {
+            setTimeout(() => {
+              get().dismiss(item.id)
+            }, AUTO_DISMISS_DELAY)
+          }
+        }
+
+        // Start processing (only queued items will be uploaded)
         get()._processQueue(queryClient)
       },
 
@@ -101,11 +127,6 @@ export const useUploadStore = create<UploadState>()(
 
         // Check retry limit
         if (item.retryCount >= MAX_RETRIES) {
-          showNotification({
-            type: 'error',
-            title: 'Retry limit reached',
-            description: `${item.fileName} has failed ${MAX_RETRIES} times`,
-          })
           return
         }
 
@@ -127,6 +148,24 @@ export const useUploadStore = create<UploadState>()(
         }, delay)
       },
 
+      dismiss: (id) => {
+        const state = get()
+        // Skip if already exiting or doesn't exist
+        if (state.exitingIds.has(id) || !state.items.some((item) => item.id === id)) {
+          return
+        }
+
+        // Mark as exiting for animation
+        set((state) => ({
+          exitingIds: new Set([...state.exitingIds, id]),
+        }))
+
+        // Remove after animation completes
+        setTimeout(() => {
+          get().remove(id)
+        }, EXIT_ANIMATION_DURATION)
+      },
+
       remove: (id) => {
         // Cancel if uploading
         const controller = abortControllerMap.get(id)
@@ -138,9 +177,14 @@ export const useUploadStore = create<UploadState>()(
         // Clean up file reference
         fileMap.delete(id)
 
-        set((state) => ({
-          items: state.items.filter((item) => item.id !== id),
-        }))
+        set((state) => {
+          const newExitingIds = new Set(state.exitingIds)
+          newExitingIds.delete(id)
+          return {
+            items: state.items.filter((item) => item.id !== id),
+            exitingIds: newExitingIds,
+          }
+        })
       },
 
       clearCompleted: () => {
@@ -217,34 +261,13 @@ export const useUploadStore = create<UploadState>()(
 
               abortControllerMap.delete(item.id)
 
+              // Auto-dismiss completed upload after delay
+              setTimeout(() => {
+                get().dismiss(item.id)
+              }, AUTO_DISMISS_DELAY)
+
               // Invalidate directory cache
               void invalidateDir(queryClient, item.targetPath)
-
-              // Show success notification
-              showNotification({
-                type: 'success',
-                title: 'Upload complete',
-                description: item.fileName,
-              })
-
-              // Check for batch completion
-              const currentState = get()
-              const targetPathItems = currentState.items.filter(
-                (i) => i.targetPath === item.targetPath
-              )
-              const allDone = targetPathItems.every(
-                (i) => i.status === 'done' || i.status === 'failed'
-              )
-              const doneCount = targetPathItems.filter((i) => i.status === 'done').length
-
-              // Show batch notification if 3+ files completed together
-              if (allDone && doneCount >= 3) {
-                showNotification({
-                  type: 'success',
-                  title: `${doneCount} files uploaded`,
-                  description: 'All uploads complete',
-                })
-              }
 
               // Process more from queue
               get()._processQueue(queryClient)
@@ -262,15 +285,6 @@ export const useUploadStore = create<UploadState>()(
                 status: 'failed',
                 error: errorMessage,
               })
-
-              // Show error notification (skip for user-cancelled)
-              if (!isAbort) {
-                showNotification({
-                  type: 'error',
-                  title: 'Upload failed',
-                  description: `${item.fileName} - ${errorMessage}`,
-                })
-              }
 
               // Process more from queue
               get()._processQueue(queryClient)
