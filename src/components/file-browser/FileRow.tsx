@@ -16,6 +16,7 @@ interface FileRowProps {
   onRename: (newName: string) => void
   onCancelRename: () => void
   isDragDisabled?: boolean
+  index?: number
 }
 
 export const FileRow = memo(function FileRow({
@@ -28,6 +29,7 @@ export const FileRow = memo(function FileRow({
   onRename,
   onCancelRename,
   isDragDisabled = false,
+  index = 0,
 }: FileRowProps) {
   const navigate = useNavigate()
   const isDirectory = entry.type === 'directory'
@@ -137,6 +139,9 @@ export const FileRow = memo(function FileRow({
     [entryPath, isDirectory, onContextMenu]
   )
 
+  // Stagger animation class (cap at 10 items for performance)
+  const staggerClass = index < 10 ? `stagger-${index + 1}` : 'stagger-10'
+
   const rowContent = (
     <div
       ref={(node) => {
@@ -146,8 +151,8 @@ export const FileRow = memo(function FileRow({
         }
       }}
       data-file-row
-      className={`content-auto group flex h-12 cursor-pointer items-center border-b border-border/30 px-4 transition-all duration-150 hover:bg-accent/40 ${
-        isSelected ? 'bg-primary/8 hover:bg-primary/12' : ''
+      className={`content-auto group flex h-12 cursor-pointer items-center border-b border-border/30 px-4 transition-all duration-200 ease-out hover:bg-accent/50 hover:-translate-y-px hover:shadow-sm active:scale-[0.995] opacity-0 animate-fade-up ${staggerClass} ${
+        isSelected ? 'bg-primary/10 hover:bg-primary/15 ring-1 ring-primary/30 ring-inset shadow-sm' : ''
       } ${isDragging ? 'opacity-50 scale-[0.98]' : ''} ${isOver && isDirectory ? 'bg-primary/15 ring-1 ring-primary/50 ring-inset' : ''} ${isRenaming ? 'bg-accent/60' : ''}`}
       onClick={handleClick}
       onContextMenu={handleContextMenu}

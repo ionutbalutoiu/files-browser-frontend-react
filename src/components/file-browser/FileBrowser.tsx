@@ -108,12 +108,12 @@ export function FileBrowser({ path }: FileBrowserProps) {
     <UploadDropzone currentPath={path}>
       <div className="mx-auto max-w-6xl px-4 py-6 animate-fade-in">
         <div
-          className="overflow-hidden rounded-xl border border-border bg-card shadow-sm"
+          className="overflow-hidden rounded-xl border border-border ring-1 ring-border/50 bg-card shadow-md"
           onClick={handleBackgroundClick}
           onContextMenu={handleBackgroundContextMenu}
         >
           {/* Header with breadcrumbs and toolbar */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border bg-muted/30 px-4 py-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border bg-gradient-to-r from-muted/40 to-muted/20 px-4 py-3">
             <div className="flex items-center gap-1">
               <Breadcrumbs path={path} />
               <SearchInput
@@ -131,7 +131,7 @@ export function FileBrowser({ path }: FileBrowserProps) {
 
           {/* Footer with item count */}
           {!isLoading && itemCounts.total > 0 ? (
-            <div className="border-t border-border bg-muted/20 px-4 py-2">
+            <div className="border-t border-border bg-gradient-to-r from-muted/30 to-transparent px-4 py-2">
               <p className="text-xs text-muted-foreground">
                 {itemCounts.folders > 0 ? (
                   <span>{itemCounts.folders} {itemCounts.folders === 1 ? 'folder' : 'folders'}</span>

@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../../api/client'
 import { handleDirectoryMoveOrRename, invalidateDir } from '../../lib/cache'
 import { dirname, basename } from '../../lib/path'
-import { showToast } from '../../providers/ToastProvider'
+import { showNotification } from '../../stores/notificationStore'
 
 interface MoveItemParams {
   from: string
@@ -30,13 +30,13 @@ export function useMoveItem() {
         }
       }
 
-      // Show success toast
+      // Show success notification
       const fileName = basename(from)
       const destFolder = destParent || 'root'
-      showToast({
+      showNotification({
+        type: 'success',
         title: 'Moved successfully',
         description: `"${fileName}" → ${destFolder}`,
-        variant: 'success',
       })
     },
   })

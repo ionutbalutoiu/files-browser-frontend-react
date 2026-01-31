@@ -12,6 +12,7 @@ import {
   useDroppable,
 } from '@dnd-kit/core'
 import { FileRow } from './FileRow'
+import { FileRowSkeleton } from './FileRowSkeleton'
 import { EmptyState } from './EmptyState'
 import { FileIcon } from './FileIcon'
 import { useUIStore, SortBy, SortDirection } from '../../stores/uiStore'
@@ -218,8 +219,10 @@ export function FileList({ entries, currentPath, isLoading }: FileListProps) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20 animate-fade-in">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
+      <div>
+        {Array.from({ length: 8 }).map((_, i) => (
+          <FileRowSkeleton key={i} index={i} />
+        ))}
       </div>
     )
   }
@@ -245,7 +248,7 @@ export function FileList({ entries, currentPath, isLoading }: FileListProps) {
     >
       <div>
         <ParentRow currentPath={currentPath} />
-        {sortedEntries.map((entry) => {
+        {sortedEntries.map((entry, index) => {
           const entryPath = currentPath ? joinPath(currentPath, entry.name) : entry.name
 
           return (
@@ -259,6 +262,7 @@ export function FileList({ entries, currentPath, isLoading }: FileListProps) {
               onContextMenu={handleContextMenu}
               onRename={(newName) => handleRename(entryPath, entry.type === 'directory', newName)}
               onCancelRename={cancelRename}
+              index={index}
             />
           )
         })}

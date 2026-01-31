@@ -17,7 +17,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={cycleTheme}
-      className="group relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-all duration-200 hover:bg-accent hover:text-foreground active:scale-95"
+      className="group relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-all duration-200 hover:bg-accent hover:text-foreground hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
       title={`Theme: ${theme}`}
     >
       <span className={`transition-all duration-300 ${isAnimating ? 'rotate-180 scale-0' : 'rotate-0 scale-100'}`}>

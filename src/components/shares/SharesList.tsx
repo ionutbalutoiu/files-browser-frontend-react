@@ -1,13 +1,16 @@
 import { useSharesQuery } from '../../hooks/queries/useSharesQuery'
 import { ShareRow } from './ShareRow'
+import { ShareRowSkeleton } from './ShareRowSkeleton'
 
 export function SharesList() {
   const { data: shares = [], isLoading, error } = useSharesQuery()
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20 animate-fade-in">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
+      <div className="divide-y divide-border/30">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <ShareRowSkeleton key={i} index={i} />
+        ))}
       </div>
     )
   }

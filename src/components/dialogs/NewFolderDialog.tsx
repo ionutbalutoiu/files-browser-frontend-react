@@ -11,7 +11,7 @@ import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { useCreateFolder } from '../../hooks/mutations/useCreateFolder'
 import { useUIStore } from '../../stores/uiStore'
-import { useToast } from '../../providers/ToastProvider'
+import { useNotification } from '../../hooks/useNotification'
 import { joinPath, validatePath } from '../../lib/path'
 
 interface NewFolderDialogProps {
@@ -24,7 +24,7 @@ export function NewFolderDialog({ currentPath }: NewFolderDialogProps) {
 
   const activeDialog = useUIStore((state) => state.activeDialog)
   const closeDialog = useUIStore((state) => state.closeDialog)
-  const { toast } = useToast()
+  const notification = useNotification()
 
   const createFolder = useCreateFolder()
 
@@ -72,10 +72,9 @@ export function NewFolderDialog({ currentPath }: NewFolderDialogProps) {
         { path: fullPath },
         {
           onSuccess: () => {
-            toast({
+            notification.success({
               title: 'Folder created',
               description: `"${trimmedName}" has been created.`,
-              variant: 'success',
             })
             handleOpenChange(false)
           },
@@ -85,7 +84,7 @@ export function NewFolderDialog({ currentPath }: NewFolderDialogProps) {
         }
       )
     },
-    [name, currentPath, createFolder, toast, handleOpenChange]
+    [name, currentPath, createFolder, notification, handleOpenChange]
   )
 
   return (

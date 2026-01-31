@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider, MutationCache, Mutation } from '@tanstack/react-query'
 import { ReactNode, useState } from 'react'
-import { showToast } from './ToastProvider'
+import { showNotification } from '../stores/notificationStore'
 import { ApiError } from '../api/client'
 import { basename } from '../lib/path'
 
@@ -70,10 +70,10 @@ function createQueryClient() {
         const context = getErrorContext(mutation)
         const title = context ?? 'Error'
 
-        showToast({
+        showNotification({
+          type: 'error',
           title,
           description: message,
-          variant: 'destructive',
         })
       },
     }),
