@@ -28,23 +28,23 @@ export function FileListHeader() {
   )
 
   return (
-    <div className="sticky top-14 z-10 flex h-10 items-center border-b border-border/50 bg-muted/50 px-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+    <div className="hidden sm:flex sticky top-14 z-10 h-10 items-center gap-1 border-b border-border section-gradient-bg px-2 text-sm font-medium text-muted-foreground">
       <button
-        className="flex flex-1 items-center transition-colors hover:text-foreground"
+        className="flex flex-1 items-center interactive-hover"
         onClick={() => handleSort('name')}
       >
         Name
         <SortIcon active={sortBy === 'name'} direction={sortDirection} />
       </button>
       <button
-        className="hidden sm:flex w-20 items-center justify-end transition-colors hover:text-foreground"
+        className="hidden sm:flex w-20 items-center justify-end interactive-hover"
         onClick={() => handleSort('size')}
       >
         Size
         <SortIcon active={sortBy === 'size'} direction={sortDirection} />
       </button>
       <button
-        className="hidden md:flex w-52 items-center justify-end transition-colors hover:text-foreground ml-6"
+        className="hidden md:flex w-52 ml-6 items-center justify-end interactive-hover"
         onClick={() => handleSort('mtime')}
       >
         Modified

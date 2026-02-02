@@ -113,8 +113,8 @@ export function FileBrowser({ path }: FileBrowserProps) {
           onContextMenu={handleBackgroundContextMenu}
         >
           {/* Header with breadcrumbs and toolbar */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border bg-gradient-to-r from-muted/40 to-muted/20 px-4 py-3">
-            <div className="flex items-center gap-1">
+          <div className="flex items-center justify-between sm:justify-between gap-3 border-b border-border section-gradient-bg px-4 py-3">
+            <div className="flex items-center gap-1 sm:gap-1">
               <Breadcrumbs path={path} />
               <SearchInput
                 value={searchQuery}

@@ -17,7 +17,7 @@ const variantStyles: Record<ButtonVariant, string> = {
     'border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]',
   secondary:
     'bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]',
-  ghost: 'hover:bg-accent hover:text-accent-foreground active:scale-[0.98]',
+  ghost: 'hover:bg-accent/50 hover:text-accent-foreground hover:shadow-sm hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]',
   link: 'text-primary underline-offset-4 hover:underline',
 }
 

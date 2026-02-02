@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, MouseEvent } from 'react'
+import { useCallback, useMemo, useState, useEffect, useRef, MouseEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   DndContext,
@@ -19,6 +19,7 @@ import { useUIStore, SortBy, SortDirection } from '../../stores/uiStore'
 import { useMoveItem } from '../../hooks/mutations/useMoveItem'
 import { useRenameItem } from '../../hooks/mutations/useRenameItem'
 import { joinPath, basename, isChildOf, dirname } from '../../lib/path'
+import { getEntranceAnimationClasses } from '../../lib/animation'
 import type { DirectoryEntry } from '../../schemas/directory'
 
 interface FileListProps {
@@ -67,7 +68,7 @@ interface DragItem {
   isDirectory: boolean
 }
 
-function ParentRow({ currentPath }: { currentPath: string }) {
+function ParentRow({ currentPath, shouldAnimate }: { currentPath: string; shouldAnimate: boolean }) {
   const navigate = useNavigate()
   const { setNodeRef, isOver } = useDroppable({
     id: 'drop-parent',
@@ -83,11 +84,13 @@ function ParentRow({ currentPath }: { currentPath: string }) {
     navigate(parentPath ? `/browse/${parentPath}` : '/browse')
   }
 
+  const animationClasses = getEntranceAnimationClasses(0, shouldAnimate)
+
   return (
     <div
       ref={setNodeRef}
       onClick={handleClick}
-      className={`flex h-12 cursor-pointer items-center border-b border-border/30 px-4 text-muted-foreground transition-all duration-150 hover:bg-accent/40 ${
+      className={`flex h-12 cursor-pointer items-center border-b border-border/30 px-4 text-muted-foreground transition-all duration-150 hover:bg-accent/40 ${animationClasses} ${
         isOver ? 'bg-primary/15 ring-1 ring-primary/50 ring-inset' : ''
       }`}
     >
@@ -99,6 +102,21 @@ function ParentRow({ currentPath }: { currentPath: string }) {
 
 export function FileList({ entries, currentPath, isLoading }: FileListProps) {
   const [activeDrag, setActiveDrag] = useState<DragItem | null>(null)
+
+  // Track the path that has been animated to prevent re-animation on sort changes
+  const animatedPathRef = useRef<string | null>(null)
+  const [shouldAnimate, setShouldAnimate] = useState(true)
+
+  // Only animate when directory changes, not on sort changes
+  useEffect(() => {
+    if (animatedPathRef.current !== currentPath) {
+      animatedPathRef.current = currentPath
+      setShouldAnimate(true)
+      // Turn off animation after initial render to prevent re-animation on sort
+      const timer = setTimeout(() => setShouldAnimate(false), 600)
+      return () => clearTimeout(timer)
+    }
+  }, [currentPath])
 
   const { sortBy, sortDirection, selectPath, selectRange, openContextMenu, clearSelection, cancelRename } = useUIStore()
   const selectedPaths = useUIStore((state) => state.selectedPaths)
@@ -234,7 +252,7 @@ export function FileList({ entries, currentPath, isLoading }: FileListProps) {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <ParentRow currentPath={currentPath} />
+        <ParentRow currentPath={currentPath} shouldAnimate={shouldAnimate} />
         <EmptyState />
       </DndContext>
     )
@@ -247,9 +265,11 @@ export function FileList({ entries, currentPath, isLoading }: FileListProps) {
       onDragEnd={handleDragEnd}
     >
       <div>
-        <ParentRow currentPath={currentPath} />
+        <ParentRow currentPath={currentPath} shouldAnimate={shouldAnimate} />
         {sortedEntries.map((entry, index) => {
           const entryPath = currentPath ? joinPath(currentPath, entry.name) : entry.name
+          // Offset index by 1 when parent row exists to account for its animation slot
+          const animationIndex = currentPath ? index + 1 : index
 
           return (
             <FileRow
@@ -262,7 +282,8 @@ export function FileList({ entries, currentPath, isLoading }: FileListProps) {
               onContextMenu={handleContextMenu}
               onRename={(newName) => handleRename(entryPath, entry.type === 'directory', newName)}
               onCancelRename={cancelRename}
-              index={index}
+              index={animationIndex}
+              shouldAnimate={shouldAnimate}
             />
           )
         })}

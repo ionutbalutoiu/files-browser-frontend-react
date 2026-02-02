@@ -95,6 +95,14 @@
     content-visibility: auto;
   }
 
+  .section-gradient-bg {
+    @apply bg-gradient-to-r from-muted/40 to-muted/20;
+  }
+
+  .interactive-hover {
+    @apply rounded-md px-2.5 py-1.5 transition-all duration-150 hover:bg-accent/50 hover:text-foreground hover:shadow-sm hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98];
+  }
+
   .scrollbar-none {
     -ms-overflow-style: none;
     scrollbar-width: none;

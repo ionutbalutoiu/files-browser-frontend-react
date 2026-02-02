@@ -20,7 +20,7 @@ export function UploadTray() {
     ? `${activeCount} uploading`
     : items.every((item) => item.status === 'done')
       ? 'Complete'
-      : 'Uploads'
+      : 'Upload manager'
 
   return (
     <>
@@ -35,14 +35,14 @@ export function UploadTray() {
           className="hidden sm:flex w-full items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-lg transition-all duration-200 hover:shadow-xl"
         >
           {/* Upload icon */}
-          <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl shadow-md ${hasActive ? 'bg-primary' : 'bg-emerald-500'}`}>
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl shadow-md bg-primary">
             {hasActive ? (
               <svg className="h-4 w-4 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
             ) : (
-              <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg className="h-4 w-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zm-3 9h4v2h-4v-2zm0 4h4v2h-4v-2z" />
               </svg>
             )}
           </div>
@@ -73,14 +73,14 @@ export function UploadTray() {
             className="flex flex-1 items-center gap-3"
           >
             {/* Upload icon */}
-            <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl shadow-md ${hasActive ? 'bg-primary' : 'bg-emerald-500'}`}>
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl shadow-md bg-primary">
               {hasActive ? (
                 <svg className="h-4 w-4 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
               ) : (
-                <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <svg className="h-4 w-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zm-3 9h4v2h-4v-2zm0 4h4v2h-4v-2z" />
                 </svg>
               )}
             </div>

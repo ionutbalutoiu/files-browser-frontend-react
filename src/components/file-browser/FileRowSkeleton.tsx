@@ -1,12 +1,12 @@
 import { Skeleton } from '../ui/Skeleton'
+import { getStaggerClass } from '../../lib/animation'
 
 interface FileRowSkeletonProps {
   index?: number
 }
 
 export function FileRowSkeleton({ index = 0 }: FileRowSkeletonProps) {
-  // Cap stagger delay at 10 items
-  const staggerClass = index < 10 ? `stagger-${index + 1}` : 'stagger-10'
+  const staggerClass = getStaggerClass(index)
 
   return (
     <div

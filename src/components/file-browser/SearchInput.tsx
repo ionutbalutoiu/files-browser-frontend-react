@@ -101,7 +101,7 @@ export function SearchInput({ value, onChange, resultCount }: SearchInputProps) 
         <button
           type="button"
           onClick={handleToggle}
-          className="flex h-8 items-center justify-center rounded-lg px-2.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          className="flex items-center justify-center text-muted-foreground interactive-hover"
           aria-label="Search"
         >
           <svg

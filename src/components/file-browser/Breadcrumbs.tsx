@@ -11,7 +11,7 @@ export function Breadcrumbs({ path }: BreadcrumbsProps) {
     <nav className="flex items-center text-sm overflow-x-auto scrollbar-none">
       <Link
         to="/browse"
-        className="flex-shrink-0 flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+        className="flex-shrink-0 flex items-center gap-1.5 text-muted-foreground interactive-hover"
       >
         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -44,8 +44,8 @@ export function Breadcrumbs({ path }: BreadcrumbsProps) {
             </svg>
             <Link
               to={`/browse/${segmentPath}`}
-              className={`rounded-md px-2.5 py-1.5 transition-colors hover:bg-accent/50 max-w-[160px] truncate ${
-                isLast ? 'text-foreground font-medium' : 'text-muted-foreground hover:text-foreground'
+              className={`interactive-hover max-w-[160px] truncate ${
+                isLast ? 'text-foreground font-medium' : 'text-muted-foreground'
               }`}
             >
               {segment}

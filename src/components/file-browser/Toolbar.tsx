@@ -15,7 +15,7 @@ export function Toolbar() {
   }
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-4 sm:gap-1">
       <SimpleTooltip content="New Folder">
         <Button variant="ghost" size="sm" onClick={handleNewFolder} className="h-8 px-2.5">
           <svg

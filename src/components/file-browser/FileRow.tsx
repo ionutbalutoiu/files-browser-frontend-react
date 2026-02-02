@@ -4,6 +4,7 @@ import { useDraggable, useDroppable } from '@dnd-kit/core'
 import { FileIcon } from './FileIcon'
 import { formatFileSize, formatDate } from '../../lib/format'
 import { joinPath } from '../../lib/path'
+import { getEntranceAnimationClasses } from '../../lib/animation'
 import type { DirectoryEntry } from '../../schemas/directory'
 
 interface FileRowProps {
@@ -17,6 +18,7 @@ interface FileRowProps {
   onCancelRename: () => void
   isDragDisabled?: boolean
   index?: number
+  shouldAnimate?: boolean
 }
 
 export const FileRow = memo(function FileRow({
@@ -30,6 +32,7 @@ export const FileRow = memo(function FileRow({
   onCancelRename,
   isDragDisabled = false,
   index = 0,
+  shouldAnimate = false,
 }: FileRowProps) {
   const navigate = useNavigate()
   const isDirectory = entry.type === 'directory'
@@ -139,8 +142,7 @@ export const FileRow = memo(function FileRow({
     [entryPath, isDirectory, onContextMenu]
   )
 
-  // Stagger animation class (cap at 10 items for performance)
-  const staggerClass = index < 10 ? `stagger-${index + 1}` : 'stagger-10'
+  const animationClasses = getEntranceAnimationClasses(index, shouldAnimate)
 
   const rowContent = (
     <div
@@ -151,7 +153,7 @@ export const FileRow = memo(function FileRow({
         }
       }}
       data-file-row
-      className={`content-auto group flex h-12 cursor-pointer items-center border-b border-border/30 px-4 transition-all duration-200 ease-out hover:bg-accent/50 hover:-translate-y-px hover:shadow-sm active:scale-[0.995] opacity-0 animate-fade-up ${staggerClass} ${
+      className={`content-auto group flex h-12 cursor-pointer items-center border-b border-border/30 px-4 transition-all duration-200 ease-out hover:bg-accent/50 hover:-translate-y-px hover:shadow-sm active:scale-[0.995] ${animationClasses} ${
         isSelected ? 'bg-primary/10 hover:bg-primary/15 ring-1 ring-primary/30 ring-inset shadow-sm' : ''
       } ${isDragging ? 'opacity-50 scale-[0.98]' : ''} ${isOver && isDirectory ? 'bg-primary/15 ring-1 ring-primary/50 ring-inset' : ''} ${isRenaming ? 'bg-accent/60' : ''}`}
       onClick={handleClick}
@@ -173,11 +175,22 @@ export const FileRow = memo(function FileRow({
           />
         </form>
       ) : (
-        <span className="flex-1 truncate text-sm">{entry.name}</span>
+        <>
+          {/* Name and metadata container */}
+          <div className="flex-1 min-w-0">
+            <span className="block truncate text-sm">{entry.name}</span>
+            {/* Mobile: show date below name */}
+            <span className="sm:hidden block text-xs text-muted-foreground mt-0.5">
+              {formatDate(entry.mtime)}
+            </span>
+          </div>
+        </>
       )}
+      {/* Desktop: Size column */}
       <span className="hidden sm:block w-20 text-right text-xs text-muted-foreground">
         {formatFileSize(entry.size)}
       </span>
+      {/* Desktop: Modified column */}
       <span className="hidden md:block w-52 text-right text-xs text-muted-foreground ml-6">
         {formatDate(entry.mtime)}
       </span>
